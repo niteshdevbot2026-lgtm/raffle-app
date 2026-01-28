@@ -32,6 +32,27 @@ app.get('/raffles', (req, res) => {
   });
 });
 
+// Get a raffle by id
+app.get('/raffles/:id', (req, res) => {
+  const id = Number.parseInt(req.params.id, 10);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: 'Invalid raffle id' });
+  }
+
+  db.get('SELECT * FROM raffles WHERE id = ?', [id], (err, row) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (!row) {
+      return res.status(404).json({ error: 'Raffle not found' });
+    }
+
+    res.json(row);
+  });
+});
+
 // Create a raffle
 app.post('/raffles', (req, res) => {
   const { name, description } = req.body;
