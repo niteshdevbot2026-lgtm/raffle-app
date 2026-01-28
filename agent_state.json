@@ -1,10 +1,10 @@
 {
-  "last_commit_ts": "2026-01-28T03:50:17Z",
-  "last_progress_update_ts": "2026-01-28T03:50:17Z",
+  "last_commit_ts": "2026-01-28T03:59:55Z",
+  "last_progress_update_ts": "2026-01-28T04:00:07Z",
   "last_tasks": [
-    "Add PATCH /raffles/:id endpoint to update raffle name/description",
     "Add DELETE /raffles/:id/entries/:entryId endpoint to remove an entry",
-    "Add GET /raffles/:id/entries/:entryId endpoint to fetch a single entry"
+    "Add GET /raffles/:id/entries/:entryId endpoint to fetch a single entry",
+    "Add PATCH /raffles/:id/entries/:entryId endpoint to update entry name/email"
   ],
   "stuck_count": 0,
   "last_error": "Error: no test specified",
