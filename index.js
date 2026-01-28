@@ -246,6 +246,62 @@ app.post('/raffles', (req, res) => {
   });
 });
 
+// Update raffle fields
+app.patch('/raffles/:id', (req, res) => {
+  const raffleId = Number.parseInt(req.params.id, 10);
+
+  if (!Number.isInteger(raffleId) || raffleId <= 0) {
+    return res.status(400).json({ error: 'Invalid raffle id' });
+  }
+
+  const { name, description } = req.body;
+
+  if (name !== undefined && (typeof name !== 'string' || !name.trim())) {
+    return res.status(400).json({ error: 'Raffle name must be a non-empty string' });
+  }
+
+  if (description !== undefined && typeof description !== 'string') {
+    return res.status(400).json({ error: 'Description must be a string' });
+  }
+
+  if (name === undefined && description === undefined) {
+    return res.status(400).json({ error: 'No fields provided to update' });
+  }
+
+  db.get('SELECT * FROM raffles WHERE id = ?', [raffleId], (raffleErr, raffleRow) => {
+    if (raffleErr) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (!raffleRow) {
+      return res.status(404).json({ error: 'Raffle not found' });
+    }
+
+    const updatedName = name !== undefined ? name.trim() : raffleRow.name;
+    const updatedDescription = description !== undefined
+      ? (description.trim() ? description.trim() : null)
+      : raffleRow.description;
+
+    db.run(
+      'UPDATE raffles SET name = ?, description = ? WHERE id = ?',
+      [updatedName, updatedDescription, raffleId],
+      (updateErr) => {
+        if (updateErr) {
+          return res.status(500).json({ error: 'Database error' });
+        }
+
+        db.get('SELECT * FROM raffles WHERE id = ?', [raffleId], (getErr, row) => {
+          if (getErr) {
+            return res.status(500).json({ error: 'Database error' });
+          }
+
+          return res.json(row);
+        });
+      }
+    );
+  });
+});
+
 // Delete a raffle and related data
 app.delete('/raffles/:id', (req, res) => {
   const raffleId = Number.parseInt(req.params.id, 10);
