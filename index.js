@@ -19,6 +19,19 @@ app.get('/db-test', (req, res) => {
   });
 });
 
+// List raffles
+app.get('/raffles', (req, res) => {
+  const query = 'SELECT * FROM raffles ORDER BY created_at DESC, id DESC';
+
+  db.all(query, [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    res.json(rows);
+  });
+});
+
 // Create a raffle
 app.post('/raffles', (req, res) => {
   const { name, description } = req.body;
