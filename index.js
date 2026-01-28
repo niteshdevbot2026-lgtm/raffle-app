@@ -19,6 +19,31 @@ app.get('/db-test', (req, res) => {
   });
 });
 
+// Create a raffle
+app.post('/raffles', (req, res) => {
+  const { name, description } = req.body;
+
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'Raffle name is required' });
+  }
+
+  const insertQuery = 'INSERT INTO raffles (name, description) VALUES (?, ?)';
+  const params = [name.trim(), description || null];
+
+  db.run(insertQuery, params, function (err) {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    db.get('SELECT * FROM raffles WHERE id = ?', [this.lastID], (getErr, row) => {
+      if (getErr) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.status(201).json(row);
+    });
+  });
+});
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
