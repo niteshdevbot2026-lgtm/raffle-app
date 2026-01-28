@@ -221,6 +221,87 @@ app.post('/raffles/:id/entries', (req, res) => {
   });
 });
 
+// Delete an entry from a raffle
+app.delete('/raffles/:id/entries/:entryId', (req, res) => {
+  const raffleId = Number.parseInt(req.params.id, 10);
+  const entryId = Number.parseInt(req.params.entryId, 10);
+
+  if (!Number.isInteger(raffleId) || raffleId <= 0) {
+    return res.status(400).json({ error: 'Invalid raffle id' });
+  }
+
+  if (!Number.isInteger(entryId) || entryId <= 0) {
+    return res.status(400).json({ error: 'Invalid entry id' });
+  }
+
+  db.get('SELECT id FROM raffles WHERE id = ?', [raffleId], (raffleErr, raffleRow) => {
+    if (raffleErr) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (!raffleRow) {
+      return res.status(404).json({ error: 'Raffle not found' });
+    }
+
+    db.get('SELECT * FROM entries WHERE id = ? AND raffle_id = ?', [entryId, raffleId], (entryErr, entryRow) => {
+      if (entryErr) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      if (!entryRow) {
+        return res.status(404).json({ error: 'Entry not found' });
+      }
+
+      let responded = false;
+      const handleError = (err) => {
+        if (responded) return;
+        responded = true;
+        return res.status(500).json({ error: 'Database error' });
+      };
+
+      db.serialize(() => {
+        db.get(
+          'SELECT id FROM raffle_winners WHERE raffle_id = ? AND entry_id = ?',
+          [raffleId, entryId],
+          (winnerErr, winnerRow) => {
+            if (winnerErr) {
+              return handleError(winnerErr);
+            }
+
+            const winnerCleared = Boolean(winnerRow);
+
+            db.run(
+              'DELETE FROM raffle_winners WHERE raffle_id = ? AND entry_id = ?',
+              [raffleId, entryId],
+              (deleteWinnerErr) => {
+                if (deleteWinnerErr) {
+                  return handleError(deleteWinnerErr);
+                }
+
+                db.run('DELETE FROM entries WHERE id = ?', [entryId], (deleteErr) => {
+                  if (deleteErr) {
+                    return handleError(deleteErr);
+                  }
+
+                  if (!responded) {
+                    responded = true;
+                    return res.json({
+                      deleted: true,
+                      id: entryId,
+                      raffle_id: raffleId,
+                      winner_cleared: winnerCleared
+                    });
+                  }
+                });
+              }
+            );
+          }
+        );
+      });
+    });
+  });
+});
+
 // Create a raffle
 app.post('/raffles', (req, res) => {
   const { name, description } = req.body;
