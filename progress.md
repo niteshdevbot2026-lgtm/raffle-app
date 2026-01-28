@@ -1,15 +1,22 @@
 REPO_URL: https://github.com/niteshdevbot2026-lgtm/raffle-app.git
-BRANCH: main
+BRANCH: raffle-system
+MODE: BUILD
+LAST_COMMIT_TS: 
+LAST_PROGRESS_UPDATE_TS: 
+LAST_3_TASKS: []
+STUCK_COUNT: 0
+LAST_ERROR: 
 
 ## Last Action
-- Added raffle winner selection endpoint (POST /raffles/:id/winner) with persistence in raffle_winners table
+- Added GET /raffles/:id/winner endpoint to retrieve winner details with selected_at timestamp
 
 ## Next Task
-- Add GET /raffles/:id/winner endpoint to retrieve winner details
+- Add DELETE /raffles/:id endpoint to remove a raffle and its entries/winner
 
 ## Assumptions
 - Starting fresh MVP
 - SQLite for simplicity
 
 ## Events
+- Tests failed: "Error: no test specified"
 - Tests failed: "Error: no test specified"
