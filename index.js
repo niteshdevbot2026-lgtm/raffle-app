@@ -82,6 +82,42 @@ app.get('/raffles/:id/entries', (req, res) => {
   });
 });
 
+// Get a single entry for a raffle
+app.get('/raffles/:id/entries/:entryId', (req, res) => {
+  const raffleId = Number.parseInt(req.params.id, 10);
+  const entryId = Number.parseInt(req.params.entryId, 10);
+
+  if (!Number.isInteger(raffleId) || raffleId <= 0) {
+    return res.status(400).json({ error: 'Invalid raffle id' });
+  }
+
+  if (!Number.isInteger(entryId) || entryId <= 0) {
+    return res.status(400).json({ error: 'Invalid entry id' });
+  }
+
+  db.get('SELECT id FROM raffles WHERE id = ?', [raffleId], (raffleErr, raffleRow) => {
+    if (raffleErr) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (!raffleRow) {
+      return res.status(404).json({ error: 'Raffle not found' });
+    }
+
+    db.get('SELECT * FROM entries WHERE id = ? AND raffle_id = ?', [entryId, raffleId], (entryErr, entryRow) => {
+      if (entryErr) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      if (!entryRow) {
+        return res.status(404).json({ error: 'Entry not found' });
+      }
+
+      return res.json(entryRow);
+    });
+  });
+});
+
 // Get winner for a raffle
 app.get('/raffles/:id/winner', (req, res) => {
   const raffleId = Number.parseInt(req.params.id, 10);
