@@ -53,6 +53,51 @@ app.get('/raffles/:id', (req, res) => {
   });
 });
 
+// Create an entry for a raffle
+app.post('/raffles/:id/entries', (req, res) => {
+  const raffleId = Number.parseInt(req.params.id, 10);
+
+  if (!Number.isInteger(raffleId) || raffleId <= 0) {
+    return res.status(400).json({ error: 'Invalid raffle id' });
+  }
+
+  const { name, email } = req.body;
+
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'Entry name is required' });
+  }
+
+  if (email !== undefined && (typeof email !== 'string' || !email.trim())) {
+    return res.status(400).json({ error: 'Email must be a non-empty string' });
+  }
+
+  db.get('SELECT id FROM raffles WHERE id = ?', [raffleId], (raffleErr, raffleRow) => {
+    if (raffleErr) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (!raffleRow) {
+      return res.status(404).json({ error: 'Raffle not found' });
+    }
+
+    const insertQuery = 'INSERT INTO entries (raffle_id, name, email) VALUES (?, ?, ?)';
+    const params = [raffleId, name.trim(), email ? email.trim() : null];
+
+    db.run(insertQuery, params, function (err) {
+      if (err) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      db.get('SELECT * FROM entries WHERE id = ?', [this.lastID], (getErr, row) => {
+        if (getErr) {
+          return res.status(500).json({ error: 'Database error' });
+        }
+        res.status(201).json(row);
+      });
+    });
+  });
+});
+
 // Create a raffle
 app.post('/raffles', (req, res) => {
   const { name, description } = req.body;

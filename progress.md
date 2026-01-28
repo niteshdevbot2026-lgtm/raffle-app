@@ -2,14 +2,14 @@ REPO_URL: https://github.com/niteshdevbot2026-lgtm/raffle-app.git
 BRANCH: main
 
 ## Last Action
-- Implemented GET /raffles endpoint to list raffles ordered by newest first
+- Added entries table and POST /raffles/:id/entries endpoint with validation and 404 handling
 
 ## Next Task
-- Implement GET /raffles/:id endpoint to fetch a single raffle by id
+- Implement GET /raffles/:id/entries endpoint to list entries for a raffle
 
 ## Assumptions
 - Starting fresh MVP
 - SQLite for simplicity
 
 ## Events
-- Tests not run (no test script)
+- Tests failed: "Error: no test specified"

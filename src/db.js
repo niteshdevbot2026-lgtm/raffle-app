@@ -11,8 +11,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
   }
 });
 
-// Create a simple table for raffles
-const createTableQuery = `
+// Create tables for raffles and entries
+const createRafflesTableQuery = `
 CREATE TABLE IF NOT EXISTS raffles (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
@@ -21,9 +21,20 @@ CREATE TABLE IF NOT EXISTS raffles (
 );
 `;
 
+const createEntriesTableQuery = `
+CREATE TABLE IF NOT EXISTS entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  raffle_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  email TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+`;
+
 // Initialize DB schema
 db.serialize(() => {
-  db.run(createTableQuery);
+  db.run(createRafflesTableQuery);
+  db.run(createEntriesTableQuery);
 });
 
 module.exports = db;
