@@ -281,6 +281,43 @@ app.post('/raffles/:id/winner', (req, res) => {
   });
 });
 
+// Clear winner for a raffle
+app.delete('/raffles/:id/winner', (req, res) => {
+  const raffleId = Number.parseInt(req.params.id, 10);
+
+  if (!Number.isInteger(raffleId) || raffleId <= 0) {
+    return res.status(400).json({ error: 'Invalid raffle id' });
+  }
+
+  db.get('SELECT id FROM raffles WHERE id = ?', [raffleId], (raffleErr, raffleRow) => {
+    if (raffleErr) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (!raffleRow) {
+      return res.status(404).json({ error: 'Raffle not found' });
+    }
+
+    db.get('SELECT entry_id FROM raffle_winners WHERE raffle_id = ?', [raffleId], (winnerErr, winnerRow) => {
+      if (winnerErr) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      if (!winnerRow) {
+        return res.status(404).json({ error: 'Winner not selected' });
+      }
+
+      db.run('DELETE FROM raffle_winners WHERE raffle_id = ?', [raffleId], (deleteErr) => {
+        if (deleteErr) {
+          return res.status(500).json({ error: 'Database error' });
+        }
+
+        return res.json({ deleted: true, raffle_id: raffleId, entry_id: winnerRow.entry_id });
+      });
+    });
+  });
+});
+
 // Create an entry for a raffle
 app.post('/raffles/:id/entries', (req, res) => {
   const raffleId = Number.parseInt(req.params.id, 10);
