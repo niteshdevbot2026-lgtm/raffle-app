@@ -118,6 +118,75 @@ app.get('/raffles/:id/entries/:entryId', (req, res) => {
   });
 });
 
+// Update an entry for a raffle
+app.patch('/raffles/:id/entries/:entryId', (req, res) => {
+  const raffleId = Number.parseInt(req.params.id, 10);
+  const entryId = Number.parseInt(req.params.entryId, 10);
+
+  if (!Number.isInteger(raffleId) || raffleId <= 0) {
+    return res.status(400).json({ error: 'Invalid raffle id' });
+  }
+
+  if (!Number.isInteger(entryId) || entryId <= 0) {
+    return res.status(400).json({ error: 'Invalid entry id' });
+  }
+
+  const { name, email } = req.body;
+
+  if (name !== undefined && (typeof name !== 'string' || !name.trim())) {
+    return res.status(400).json({ error: 'Entry name must be a non-empty string' });
+  }
+
+  if (email !== undefined && (typeof email !== 'string' || !email.trim())) {
+    return res.status(400).json({ error: 'Email must be a non-empty string' });
+  }
+
+  if (name === undefined && email === undefined) {
+    return res.status(400).json({ error: 'No fields provided to update' });
+  }
+
+  db.get('SELECT id FROM raffles WHERE id = ?', [raffleId], (raffleErr, raffleRow) => {
+    if (raffleErr) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (!raffleRow) {
+      return res.status(404).json({ error: 'Raffle not found' });
+    }
+
+    db.get('SELECT * FROM entries WHERE id = ? AND raffle_id = ?', [entryId, raffleId], (entryErr, entryRow) => {
+      if (entryErr) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      if (!entryRow) {
+        return res.status(404).json({ error: 'Entry not found' });
+      }
+
+      const updatedName = name !== undefined ? name.trim() : entryRow.name;
+      const updatedEmail = email !== undefined ? email.trim() : entryRow.email;
+
+      db.run(
+        'UPDATE entries SET name = ?, email = ? WHERE id = ? AND raffle_id = ?',
+        [updatedName, updatedEmail, entryId, raffleId],
+        (updateErr) => {
+          if (updateErr) {
+            return res.status(500).json({ error: 'Database error' });
+          }
+
+          db.get('SELECT * FROM entries WHERE id = ? AND raffle_id = ?', [entryId, raffleId], (getErr, row) => {
+            if (getErr) {
+              return res.status(500).json({ error: 'Database error' });
+            }
+
+            return res.json(row);
+          });
+        }
+      );
+    });
+  });
+});
+
 // Get winner for a raffle
 app.get('/raffles/:id/winner', (req, res) => {
   const raffleId = Number.parseInt(req.params.id, 10);
