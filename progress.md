@@ -1,13 +1,13 @@
-# progress.md
-
 REPO_URL: https://github.com/niteshdevbot2026-lgtm/raffle-app.git
 BRANCH: main
 
 ## Last Action
-- Initial setup
+- Initialize Node.js project with Express backend and basic health check endpoint
+- Setup SQLite database, created DB connection module, and integrated with Express backend
+- Added /db-test endpoint to verify database connection
 
 ## Next Task
-- Initialize Node.js project with Express backend
+- Implement raffle creation API endpoint
 
 ## Assumptions
 - Starting fresh MVP
