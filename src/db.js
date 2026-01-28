@@ -31,10 +31,22 @@ CREATE TABLE IF NOT EXISTS entries (
 );
 `;
 
+const createWinnersTableQuery = `
+CREATE TABLE IF NOT EXISTS raffle_winners (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  raffle_id INTEGER NOT NULL UNIQUE,
+  entry_id INTEGER NOT NULL,
+  selected_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (raffle_id) REFERENCES raffles(id),
+  FOREIGN KEY (entry_id) REFERENCES entries(id)
+);
+`;
+
 // Initialize DB schema
 db.serialize(() => {
   db.run(createRafflesTableQuery);
   db.run(createEntriesTableQuery);
+  db.run(createWinnersTableQuery);
 });
 
 module.exports = db;

@@ -82,6 +82,59 @@ app.get('/raffles/:id/entries', (req, res) => {
   });
 });
 
+// Select a winner for a raffle
+app.post('/raffles/:id/winner', (req, res) => {
+  const raffleId = Number.parseInt(req.params.id, 10);
+
+  if (!Number.isInteger(raffleId) || raffleId <= 0) {
+    return res.status(400).json({ error: 'Invalid raffle id' });
+  }
+
+  db.get('SELECT id FROM raffles WHERE id = ?', [raffleId], (raffleErr, raffleRow) => {
+    if (raffleErr) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (!raffleRow) {
+      return res.status(404).json({ error: 'Raffle not found' });
+    }
+
+    db.get('SELECT entry_id FROM raffle_winners WHERE raffle_id = ?', [raffleId], (winnerErr, winnerRow) => {
+      if (winnerErr) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+
+      if (winnerRow) {
+        return db.get('SELECT * FROM entries WHERE id = ?', [winnerRow.entry_id], (entryErr, entryRow) => {
+          if (entryErr) {
+            return res.status(500).json({ error: 'Database error' });
+          }
+
+          return res.status(409).json({ error: 'Winner already selected', winner: entryRow });
+        });
+      }
+
+      db.get('SELECT * FROM entries WHERE raffle_id = ? ORDER BY RANDOM() LIMIT 1', [raffleId], (entryErr, entryRow) => {
+        if (entryErr) {
+          return res.status(500).json({ error: 'Database error' });
+        }
+
+        if (!entryRow) {
+          return res.status(400).json({ error: 'No entries for raffle' });
+        }
+
+        db.run('INSERT INTO raffle_winners (raffle_id, entry_id) VALUES (?, ?)', [raffleId, entryRow.id], (insertErr) => {
+          if (insertErr) {
+            return res.status(500).json({ error: 'Database error' });
+          }
+
+          return res.status(201).json({ winner: entryRow });
+        });
+      });
+    });
+  });
+});
+
 // Create an entry for a raffle
 app.post('/raffles/:id/entries', (req, res) => {
   const raffleId = Number.parseInt(req.params.id, 10);
