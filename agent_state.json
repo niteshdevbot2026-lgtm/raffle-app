@@ -1,9 +1,10 @@
 {
-  "last_commit_ts": "2026-01-28T03:41:52Z",
-  "last_progress_update_ts": "2026-01-28T03:41:52Z",
+  "last_commit_ts": "2026-01-28T03:45:28Z",
+  "last_progress_update_ts": "2026-01-28T03:45:28Z",
   "last_tasks": [
     "Add DELETE /raffles/:id endpoint to remove a raffle and its entries/winner",
-    "Add PATCH /raffles/:id endpoint to update raffle name/description"
+    "Add PATCH /raffles/:id endpoint to update raffle name/description",
+    "Add DELETE /raffles/:id/entries/:entryId endpoint to remove an entry"
   ],
   "stuck_count": 0,
   "last_error": "Error: no test specified",
