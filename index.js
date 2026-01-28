@@ -246,6 +246,57 @@ app.post('/raffles', (req, res) => {
   });
 });
 
+// Delete a raffle and related data
+app.delete('/raffles/:id', (req, res) => {
+  const raffleId = Number.parseInt(req.params.id, 10);
+
+  if (!Number.isInteger(raffleId) || raffleId <= 0) {
+    return res.status(400).json({ error: 'Invalid raffle id' });
+  }
+
+  db.get('SELECT id FROM raffles WHERE id = ?', [raffleId], (raffleErr, raffleRow) => {
+    if (raffleErr) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    if (!raffleRow) {
+      return res.status(404).json({ error: 'Raffle not found' });
+    }
+
+    let responded = false;
+    const handleError = (err) => {
+      if (responded) return;
+      responded = true;
+      return res.status(500).json({ error: 'Database error' });
+    };
+
+    db.serialize(() => {
+      db.run('DELETE FROM raffle_winners WHERE raffle_id = ?', [raffleId], (winnerErr) => {
+        if (winnerErr) {
+          return handleError(winnerErr);
+        }
+      });
+
+      db.run('DELETE FROM entries WHERE raffle_id = ?', [raffleId], (entriesErr) => {
+        if (entriesErr) {
+          return handleError(entriesErr);
+        }
+      });
+
+      db.run('DELETE FROM raffles WHERE id = ?', [raffleId], (deleteErr) => {
+        if (deleteErr) {
+          return handleError(deleteErr);
+        }
+
+        if (!responded) {
+          responded = true;
+          return res.json({ deleted: true, id: raffleId });
+        }
+      });
+    });
+  });
+});
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
